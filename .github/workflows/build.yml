@@ -51,7 +51,7 @@ jobs:
           chmod +x gradlew
           ./gradlew bundleRelease --no-daemon
 
-      - name: Locate and Stage AAB
+      - name: Stage Artifact
         run: |
           mkdir -p release-bundle
           find android/app/build/outputs/bundle -name "*.aab" -exec cp {} release-bundle/cipher-of-baphomet.aab \;
