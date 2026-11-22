@@ -12,18 +12,21 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#090608">
+<meta name="theme-color" content="#050406">
 
 <style>
   :root {
-    --bg: #090608;
-    --card: #150e13;
-    --border: #3b1924;
-    --crimson: #a31526;
-    --bright-red: #ff2a44;
-    --gold: #d4af37;
-    --ash: #665b63;
-    --text: #e8dcd8;
+    --bg: #050406;
+    --card: #1c1218;
+    --card-surface: #241720;
+    --border: #632032;
+    --border-bright: #9e2a47;
+    --crimson: #c41830;
+    --bright-red: #ff334f;
+    --gold: #ffd700;
+    --gold-dim: #c5a028;
+    --ash: #ab9fa8;
+    --text: #f8f4f2;
   }
 
   * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -65,9 +68,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     color: var(--ash);
     margin-bottom: 4px;
+    font-weight: 600;
   }
 
   .top-links {
@@ -76,32 +80,35 @@
   }
 
   .top-btn {
-    background: transparent;
-    border: 1px solid var(--border);
+    background: var(--card);
+    border: 1px solid var(--border-bright);
     color: var(--gold);
     border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 0.68rem;
+    padding: 4px 8px;
+    font-size: 0.75rem;
     cursor: pointer;
     text-decoration: none;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
   }
 
   h1 {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     letter-spacing: 2.5px;
     color: var(--bright-red);
-    text-shadow: 0 0 12px rgba(255, 42, 68, 0.5);
+    text-shadow: 0 0 16px rgba(255, 51, 79, 0.65), 0 0 4px rgba(0,0,0,0.9);
+    font-weight: 800;
   }
 
   .subtitle {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     color: var(--ash);
-    letter-spacing: 1px;
-    margin-top: 1px;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+    font-weight: 600;
   }
 
   /* Mode Bar */
@@ -115,118 +122,143 @@
 
   .mode-btn {
     flex: 1 1 30%;
-    background: #11090d;
+    background: #180f15;
     border: 1px solid var(--border);
-    color: var(--ash);
+    color: #c9bec6;
     border-radius: 4px;
-    padding: 5px 0;
-    font-size: 0.62rem;
+    padding: 6px 0;
+    font-size: 0.66rem;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     text-align: center;
+    transition: all 0.15s;
   }
 
   .mode-btn.active {
-    background: var(--card);
+    background: var(--card-surface);
     border-color: var(--bright-red);
-    color: var(--bright-red);
-    box-shadow: 0 0 6px rgba(255, 42, 68, 0.3);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 51, 79, 0.5), inset 0 0 8px rgba(255, 51, 79, 0.2);
   }
 
   .mode-btn.daily {
     color: var(--gold);
+    border-color: var(--gold-dim);
   }
 
   .mode-btn.daily.active {
+    background: #23190e;
     border-color: var(--gold);
-    color: var(--gold);
-    box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
 
   /* Altar & Board */
   .altar {
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border-bright);
     border-radius: 8px;
     width: 100%;
-    padding: 8px 10px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    padding: 9px 12px;
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.9), 0 0 12px rgba(99, 32, 50, 0.35);
   }
 
   .altar-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     color: var(--ash);
+    font-weight: 700;
+    letter-spacing: 0.5px;
   }
 
   .slots {
     display: flex;
     justify-content: center;
-    gap: 6px;
-    margin: 6px 0;
+    gap: 8px;
+    margin: 8px 0;
   }
 
   .slot {
-    width: 50px;
-    height: 58px;
-    border: 2px solid var(--border);
+    width: 52px;
+    height: 60px;
+    border: 2px solid var(--border-bright);
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.55rem;
-    font-weight: bold;
-    color: var(--text);
-    background: #0d070a;
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: #0f070b;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
     transition: all 0.2s;
   }
 
-  .slot.len-5 { width: 42px; height: 52px; font-size: 1.35rem; }
-  .slot.len-6 { width: 36px; height: 48px; font-size: 1.2rem; }
+  .slot.len-5 { width: 44px; height: 54px; font-size: 1.45rem; }
+  .slot.len-6 { width: 38px; height: 50px; font-size: 1.3rem; }
 
   .slot.locked {
     border-color: var(--bright-red);
     color: var(--bright-red);
-    box-shadow: 0 0 8px rgba(255, 42, 68, 0.4);
+    background: #250b12;
+    box-shadow: 0 0 12px rgba(255, 51, 79, 0.65), inset 0 0 8px rgba(255, 51, 79, 0.3);
   }
 
   /* Rune Bank */
   .bank {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
+    gap: 5px;
     width: 100%;
-    margin: 3px 0;
+    margin: 4px 0;
   }
 
   .bank-item {
-    background: #11090d;
+    background: #180f15;
     border: 1px solid var(--border);
     border-radius: 4px;
     text-align: center;
-    padding: 3px 0;
-    font-size: 0.72rem;
-    color: var(--ash);
+    padding: 4px 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #d8ced5;
   }
 
-  .bank-item.pentagram { color: var(--bright-red); border-color: var(--bright-red); }
-  .bank-item.cross { color: var(--gold); border-color: var(--gold); }
-  .bank-item.dead { opacity: 0.25; text-decoration: line-through; }
+  .bank-item.pentagram { 
+    color: #ffffff; 
+    background: #4a0d17;
+    border-color: var(--bright-red);
+    box-shadow: 0 0 8px rgba(255, 51, 79, 0.6); 
+  }
+  .bank-item.cross { 
+    color: #ffffff; 
+    background: #42320a;
+    border-color: var(--gold); 
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+  }
+  .bank-item.dead { 
+    opacity: 0.3; 
+    background: #090507;
+    color: #60555d;
+    border-color: #2b1720;
+    text-decoration: line-through; 
+  }
 
   /* Grimoire Log */
   .grimoire {
     width: 100%;
     flex: 1 1 auto;
-    min-height: 75px;
-    max-height: 160px;
-    background: #090507;
-    border: 1px solid var(--border);
+    min-height: 80px;
+    max-height: 165px;
+    background: #0d070a;
+    border: 1.5px solid var(--border);
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 6px 10px;
     overflow-y: auto;
-    font-size: 0.8rem;
-    margin: 3px 0;
+    font-size: 0.86rem;
+    margin: 4px 0;
     display: flex;
     flex-direction: column-reverse;
   }
@@ -234,43 +266,53 @@
   .log-entry {
     display: flex;
     justify-content: space-between;
-    padding: 2px 0;
-    border-bottom: 1px dashed rgba(255,255,255,0.05);
-    font-family: monospace;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(158, 42, 71, 0.25);
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: #f2e8ec;
   }
 
   /* Keypad */
   .keypad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 7px;
     width: 100%;
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
   button.key {
-    background: #190e15;
-    border: 1px solid var(--border);
+    background: #20141b;
+    border: 1.5px solid var(--border);
     border-radius: 8px;
-    color: var(--text);
+    color: #ffffff;
     padding: 13px 0;
-    font-size: 1.35rem;
+    font-size: 1.45rem;
+    font-weight: 700;
     cursor: pointer;
     touch-action: manipulation;
     font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 3px 0 #0d070a;
+    transition: all 0.1s;
   }
 
   button.key:active {
     background: var(--crimson);
+    border-color: var(--bright-red);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #0d070a;
   }
 
   button.key.action {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--gold);
-    font-weight: bold;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border-color: #705814;
   }
 
   /* Modals */
@@ -278,7 +320,7 @@
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.88);
     align-items: center;
     justify-content: center;
     padding: 16px;
@@ -286,52 +328,56 @@
   }
 
   .modal-content {
-    background: var(--card);
+    background: var(--card-surface);
     border: 2px solid var(--bright-red);
     border-radius: 8px;
-    padding: 20px;
+    padding: 22px;
     text-align: center;
     max-width: 320px;
     width: 100%;
-    box-shadow: 0 0 24px rgba(255,42,68,0.4);
+    box-shadow: 0 0 30px rgba(255, 51, 79, 0.6);
   }
 
-  .modal-content h2 { margin-bottom: 8px; font-size: 1.2rem; color: var(--bright-red); }
-  .modal-content p { font-size: 0.82rem; margin-bottom: 14px; color: var(--text); line-height: 1.4; white-space: pre-line; }
+  .modal-content h2 { margin-bottom: 10px; font-size: 1.3rem; color: var(--bright-red); text-shadow: 0 0 8px rgba(255,51,79,0.5); }
+  .modal-content p { font-size: 0.88rem; margin-bottom: 16px; color: var(--text); line-height: 1.5; white-space: pre-line; }
 
   .modal-input {
     width: 100%;
-    background: #0d070a;
-    border: 1px solid var(--border);
+    background: #11070c;
+    border: 1.5px solid var(--border-bright);
     color: var(--gold);
-    padding: 8px;
+    padding: 10px;
     font-family: inherit;
     border-radius: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 700;
   }
 
   .modal-btn {
     background: var(--crimson);
-    color: #fff;
-    border: none;
-    padding: 9px 16px;
+    color: #ffffff;
+    border: 1px solid var(--bright-red);
+    padding: 10px 18px;
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
+    font-weight: 700;
     cursor: pointer;
     font-family: inherit;
+    letter-spacing: 0.5px;
   }
 
   .badge-tag {
     display: inline-block;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 3px;
-    font-size: 0.7rem;
-    margin: 2px;
-    background: #23111b;
-    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    margin: 3px;
+    background: #331422;
+    border: 1px solid var(--gold-dim);
     color: var(--gold);
+    font-weight: 600;
   }
 </style>
 </head>
@@ -345,7 +391,6 @@
       </div>
       <div class="top-links">
         <button class="top-btn" id="audioToggle" onclick="toggleAudio()">🔊</button>
-        <a class="top-btn" href="https://buymeacoffee.com/robertburns" target="_blank" rel="noopener">🍷 Tithe</a>
       </div>
     </div>
     <h1>⛧ CIPHER OF BAPHOMET 🕇</h1>
@@ -385,7 +430,7 @@
     <button class="key" onclick="pressDigit('9')">9</button>
     <button class="key action" onclick="clearInput()">CLEAR</button>
     <button class="key" onclick="pressDigit('0')">0</button>
-    <button class="key action" style="color:var(--bright-red);" onclick="submitRite()">CHANT</button>
+    <button class="key action" style="color:var(--bright-red); border-color:var(--bright-red);" onclick="submitRite()">CHANT</button>
   </div>
 </div>
 
@@ -394,8 +439,8 @@
   <div class="modal-content">
     <h2 id="modalTitle">THE GATES UNSEAL</h2>
     <p id="modalMsg"></p>
-    <div style="display:flex; gap:6px; justify-content:center;">
-      <button class="modal-btn" style="background:#201119; border:1px solid var(--border);" onclick="closeModals()">INSPECT</button>
+    <div style="display:flex; gap:8px; justify-content:center;">
+      <button class="modal-btn" style="background:#2b141e; border:1px solid var(--border-bright);" onclick="closeModals()">INSPECT</button>
       <button class="modal-btn" onclick="initGame()">INVOKE AGAIN</button>
     </div>
   </div>
@@ -407,9 +452,9 @@
     <h2>COVEN PROFILE</h2>
     <input type="text" id="usernameInput" class="modal-input" maxlength="15" placeholder="Enter Initiate Name">
     <p id="profileStats"></p>
-    <div style="display:flex; gap:6px; justify-content:center;">
+    <div style="display:flex; gap:8px; justify-content:center;">
       <button class="modal-btn" onclick="saveProfile()">PRESERVE SEAL</button>
-      <button class="modal-btn" style="background:#201119; border:1px solid var(--border);" onclick="closeModals()">CLOSE</button>
+      <button class="modal-btn" style="background:#2b141e; border:1px solid var(--border-bright);" onclick="closeModals()">CLOSE</button>
     </div>
   </div>
 </div>
@@ -506,7 +551,7 @@
     document.getElementById("usernameInput").value = cultist.name;
     
     let badgesHtml = cultist.badges.map(b => `<span class="badge-tag">⛧ ${b}</span>`).join(" ");
-    if (!badgesHtml) badgesHtml = "<span style='color:var(--ash); font-size:0.75rem;'>No Devotion Seals unlocked yet.</span>";
+    if (!badgesHtml) badgesHtml = "<span style='color:var(--ash); font-size:0.8rem;'>No Devotion Seals unlocked yet.</span>";
 
     document.getElementById("profileStats").innerHTML = `
       <strong>Devotion Streak:</strong> ${cultist.streak} days<br>
