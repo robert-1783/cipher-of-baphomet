@@ -31,18 +31,35 @@ jobs:
           npx cap init "Cipher of Baphomet" "com.vectormediadesign.cipherofbaphomet" --web-dir www
           npx cap add android
 
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
       - name: Lock Orientation to Portrait
         run: |
           sed -i 's/<activity /<activity android:screenOrientation="sensorPortrait" /g' android/app/src/main/AndroidManifest.xml
+
+      - name: Configure Gradle Unsigned Release Fallback
+        run: |
+          cd android
+          # Ensure release build doesn't fail on missing signing config
+          echo "android.buildTypes.release.signingConfig = null" >> app/build.gradle || true
 
       - name: Build Release AAB
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease --stacktrace
+          ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Locate and Stage AAB
+        run: |
+          mkdir -p release-bundle
+          find android/app/build/outputs/bundle -name "*.aab" -exec cp {} release-bundle/cipher-of-baphomet-release.aab \;
+          ls -lah release-bundle/
 
       - name: Upload AAB to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: cipher-of-baphomet-bundle
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: release-bundle/*.aab
+          if-no-files-found: error
