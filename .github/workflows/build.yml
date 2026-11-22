@@ -1,0 +1,49 @@
+name: Build Play Store AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Scaffold Capacitor Project
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "Cipher of Baphomet" "com.vectormediadesign.cipherofbaphomet" --web-dir .
+          npx cap add android
+
+      - name: Lock Orientation to Portrait
+        run: |
+          sed -i 's/<activity /<activity android:screenOrientation="sensorPortrait" /g' android/app/src/main/AndroidManifest.xml
+
+      - name: Build Release AAB
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+      - name: Upload AAB to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: cipher-of-baphomet-bundle
+          path: android/app/build/outputs/bundle/release/*.aab
