@@ -39,9 +39,25 @@ jobs:
         run: |
           sed -i 's/<activity /<activity android:screenOrientation="sensorPortrait" /g' android/app/src/main/AndroidManifest.xml
 
-      - name: Configure Release Signing to Use Debug Key
+      - name: Fix Duplicate Kotlin Classes and Signing
         run: |
           cd android
+          # Resolve duplicate kotlin-stdlib-jdk7 / jdk8 module conflicts
+          cat << 'EOF' >> app/build.gradle
+
+          configurations.all {
+              resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+                  def requested = details.requested
+                  if (requested.group == 'org.jetbrains.kotlin') {
+                      if (requested.name == 'kotlin-stdlib-jdk7' || requested.name == 'kotlin-stdlib-jdk8') {
+                          details.useTarget("org.jetbrains.kotlin:kotlin-stdlib:${requested.version}")
+                      }
+                  }
+              }
+          }
+          EOF
+
+          # Configure release build to use the debug signing key fallback
           sed -i 's/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/g' app/build.gradle || true
           sed -i '/buildTypes {/a \        release {\n            signingConfig signingConfigs.debug\n        }' app/build.gradle || true
 
