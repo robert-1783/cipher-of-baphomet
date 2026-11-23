@@ -24,19 +24,19 @@ jobs:
         with:
           node-version: 20
 
-      - name: Initialize Web Project & Capacitor
+      - name: Initialize Web Project & Capacitor 6
         run: |
           mkdir -p www
           cp index.html www/
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@^6.0.0 @capacitor/cli@^6.0.0 @capacitor/android@^6.0.0
           npx cap init "Cipher of Baphomet" "com.vectormediadesign.cipherofbaphomet" --web-dir www
           npx cap add android
           npx cap copy android
 
-      - name: Enforce SDK 34 and Fix Dependencies
+      - name: Direct Manifest & Gradle Enforcement of API 34
         run: |
-          # 1. Force variables.gradle
+          # 1. Update variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 22
@@ -56,21 +56,17 @@ jobs:
           }
           EOF
 
-          # 2. Aggressive sed replacements on both targetSdk and compileSdk syntax
-          find android/ -name "build.gradle" -exec sed -i -E 's/(targetSdkVersion|targetSdk)[[:space:]]+[0-9]+/targetSdkVersion 34/g' {} +
-          find android/ -name "build.gradle" -exec sed -i -E 's/(compileSdkVersion|compileSdk)[[:space:]]+[0-9]+/compileSdkVersion 34/g' {} +
-          find android/ -name "build.gradle" -exec sed -i 's/rootProject.ext.targetSdkVersion/34/g' {} +
-          find android/ -name "build.gradle" -exec sed -i 's/rootProject.ext.compileSdkVersion/34/g' {} +
+          # 2. Patch build.gradle to hardcode 34 directly
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
 
-          # 3. Add Gradle resolutionStrategy for Kotlin and manifest post-processing
+          # 3. Patch AndroidManifest.xml directly to ensure <uses-sdk> has targetSdkVersion 34
+          if grep -q "android:targetSdkVersion" android/app/src/main/AndroidManifest.xml; then
+            sed -i 's/android:targetSdkVersion="[0-9]*"/android:targetSdkVersion="34"/g' android/app/src/main/AndroidManifest.xml
+          fi
+
+          # 4. Kotlin duplicate class resolution
           cat << 'EOF' >> android/app/build.gradle
-
-          android {
-              compileSdkVersion 34
-              defaultConfig {
-                  targetSdkVersion 34
-              }
-          }
 
           configurations.all {
               resolutionStrategy {
@@ -83,13 +79,6 @@ jobs:
               }
           }
           EOF
-
-      - name: Verify Target SDK Configuration
-        run: |
-          echo "=== android/variables.gradle ==="
-          cat android/variables.gradle
-          echo "=== android/app/build.gradle snippet ==="
-          grep -E "targetSdk|compileSdk" android/app/build.gradle || true
 
       - name: Generate Release Keystore
         run: |
