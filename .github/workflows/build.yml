@@ -34,8 +34,12 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Fix Kotlin Duplicate Classes
+      - name: Configure Target API 34 & Fix Kotlin Duplicates
         run: |
+          # Set compile and target SDK to 34 (Android 14) for Play Store compliance
+          sed -i 's/compileSdkVersion = 33/compileSdkVersion = 34/g' android/variables.gradle || true
+          sed -i 's/targetSdkVersion = 33/targetSdkVersion = 34/g' android/variables.gradle || true
+
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
