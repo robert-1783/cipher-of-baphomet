@@ -13,6 +13,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Locate Project Files
+        id: locate
+        run: |
+          echo "=== Root contents ==="
+          ls -la
+          echo "=== Searching for Gradle build files ==="
+          find . -maxdepth 4 -name "settings.gradle*" -o -name "build.gradle*"
+
+          BUILD_DIR=$(find . -maxdepth 3 -name "settings.gradle*" -exec dirname {} \; | head -n 1)
+          if [ -z "$BUILD_DIR" ]; then
+            BUILD_DIR=$(find . -maxdepth 3 -name "build.gradle*" -exec dirname {} \; | head -n 1)
+          fi
+          echo "Detected project root: $BUILD_DIR"
+          echo "project_dir=$BUILD_DIR" >> "$GITHUB_OUTPUT"
+
       - name: Set up Java / JDK
         uses: actions/setup-java@v4
         with:
@@ -34,8 +49,10 @@ jobs:
             -storepass "baphometReleasePass2026" \
             -keypass "baphometReleasePass2026"
 
-      - name: Build Android App Bundle (Release)
+      - name: Build Android App Bundle
         run: |
+          cd "${{ steps.locate.outputs.project_dir }}"
+          echo "Working in: $(pwd)"
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
             ./gradlew bundleRelease
@@ -45,7 +62,7 @@ jobs:
 
       - name: Sign Android App Bundle
         run: |
-          AAB_FILE=$(find app/build/outputs/bundle -name "*.aab" | head -n 1)
+          AAB_FILE=$(find . -type f -name "*.aab" | head -n 1)
           echo "Signing bundle found at: $AAB_FILE"
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore release-upload-key.jks \
@@ -53,9 +70,9 @@ jobs:
             -keypass "baphometReleasePass2026" \
             "$AAB_FILE" baphomet-upload-key
 
-      - name: Upload Signed AAB Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cipher-of-baphomet-bundle
-          path: app/build/outputs/bundle/**/*.aab
+          path: "**/*.aab"
           retention-days: 7
