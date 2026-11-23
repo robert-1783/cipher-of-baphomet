@@ -34,9 +34,9 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Enforce MinSDK 24 & TargetSDK 34
+      - name: Enforce MinSDK 24 & TargetSDK 34 Cleanly
         run: |
-          # 1. Update variables.gradle to minSdk 24 and targetSdk 34
+          # 1. Overwrite variables.gradle cleanly (source of truth for Capacitor)
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 24
@@ -56,12 +56,12 @@ jobs:
           }
           EOF
 
-          # 2. Hardcode build.gradle to enforce min 24 and target 34
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
+          # 2. Append properties to gradle.properties so Gradle CLI properties take precedence
+          echo "minSdkVersion=24" >> android/gradle.properties
+          echo "compileSdkVersion=34" >> android/gradle.properties
+          echo "targetSdkVersion=34" >> android/gradle.properties
 
-          # 3. Inject tools namespace and forced uses-sdk tag into AndroidManifest.xml
+          # 3. Add explicit uses-sdk with tools:replace to AndroidManifest.xml
           python3 -c "
           manifest_path = 'android/app/src/main/AndroidManifest.xml'
           with open(manifest_path, 'r') as f:
@@ -81,7 +81,7 @@ jobs:
               f.write(data)
           "
 
-          # 4. Kotlin duplicate resolution
+          # 4. Resolve Kotlin stdlib duplicates
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
@@ -112,7 +112,7 @@ jobs:
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease -PminSdkVersion=24 -PcompileSdkVersion=34 -PtargetSdkVersion=34
 
       - name: Sign Android App Bundle
         run: |
