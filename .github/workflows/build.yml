@@ -34,9 +34,9 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Configure Target SDK 34 & Fix Kotlin Duplicates
+      - name: Force SDK 34 & Fix Kotlin Duplicates
         run: |
-          # 1. Overwrite variables.gradle to enforce API 34 across all modules
+          # Overwrite variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 22
@@ -56,7 +56,17 @@ jobs:
           }
           EOF
 
-          # 2. Prevent legacy Kotlin duplicate class collisions
+          # Directly patch any occurrences of 32 or 33 to 34 in all gradle files
+          find android/ -name "*.gradle" -exec sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' {} +
+          find android/ -name "*.gradle" -exec sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' {} +
+          find android/ -name "*.gradle" -exec sed -i 's/targetSdk 33/targetSdk 34/g' {} +
+          find android/ -name "*.gradle" -exec sed -i 's/compileSdk 33/compileSdk 34/g' {} +
+
+          # Also hardcode targetSdkVersion 34 directly into app/build.gradle
+          sed -i 's/targetSdkVersion rootProject.ext.targetSdkVersion/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdkVersion rootProject.ext.compileSdkVersion/compileSdkVersion 34/g' android/app/build.gradle
+
+          # Fix Kotlin duplicate class collisions
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
