@@ -19,13 +19,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant Execute Permissions for Gradle
-        run: |
-          if [ -f "./gradlew" ]; then
-            chmod +x ./gradlew
-          elif [ -f "./android/gradlew" ]; then
-            chmod +x ./android/gradlew
-          fi
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Generate Release Keystore
         run: |
@@ -42,17 +37,15 @@ jobs:
       - name: Build Android App Bundle (Release)
         run: |
           if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
             ./gradlew bundleRelease
           else
-            cd android && ./gradlew bundleRelease
+            gradle bundleRelease
           fi
 
       - name: Sign Android App Bundle
         run: |
-          AAB_FILE=$(find . -type f -name "*release*.aab" | head -n 1)
-          if [ -z "$AAB_FILE" ]; then
-            AAB_FILE=$(find . -type f -name "*.aab" | head -n 1)
-          fi
+          AAB_FILE=$(find app/build/outputs/bundle -name "*.aab" | head -n 1)
           echo "Signing bundle found at: $AAB_FILE"
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore release-upload-key.jks \
@@ -64,5 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cipher-of-baphomet-bundle
-          path: "**/build/outputs/bundle/release/*.aab"
+          path: app/build/outputs/bundle/**/*.aab
           retention-days: 7
