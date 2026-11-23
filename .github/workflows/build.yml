@@ -34,6 +34,22 @@ jobs:
           npx cap add android
           npx cap copy android
 
+      - name: Fix Kotlin Duplicate Classes
+        run: |
+          cat << 'EOF' >> android/app/build.gradle
+
+          configurations.all {
+              resolutionStrategy {
+                  eachDependency { DependencyResolveDetails details ->
+                      if (details.requested.group == 'org.jetbrains.kotlin' && 
+                          (details.requested.name == 'kotlin-stdlib-jdk7' || details.requested.name == 'kotlin-stdlib-jdk8')) {
+                          details.useTarget("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
+                      }
+                  }
+              }
+          }
+          EOF
+
       - name: Generate Release Keystore
         run: |
           keytool -genkeypair -v \
