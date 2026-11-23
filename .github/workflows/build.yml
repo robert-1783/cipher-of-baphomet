@@ -34,9 +34,9 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Enforce MinSDK 24 & TargetSDK 34 Cleanly
+      - name: Enforce MinSDK 24, TargetSDK 34 & VersionCode 2
         run: |
-          # 1. Overwrite variables.gradle cleanly (source of truth for Capacitor)
+          # 1. Overwrite variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 24
@@ -56,12 +56,27 @@ jobs:
           }
           EOF
 
-          # 2. Append properties to gradle.properties so Gradle CLI properties take precedence
+          # 2. Append properties to gradle.properties
           echo "minSdkVersion=24" >> android/gradle.properties
           echo "compileSdkVersion=34" >> android/gradle.properties
           echo "targetSdkVersion=34" >> android/gradle.properties
 
-          # 3. Add explicit uses-sdk with tools:replace to AndroidManifest.xml
+          # 3. Patch app/build.gradle directly to guarantee versionCode 2 and SDK 34
+          python3 -c "
+          gradle_path = 'android/app/build.gradle'
+          with open(gradle_path, 'r') as f:
+              content = f.read()
+
+          # Enforce versionCode 2
+          import re
+          content = re.sub(r'versionCode\s+\d+', 'versionCode 2', content)
+          content = re.sub(r'versionName\s+[\"\'][^\"\']+[\"\']', 'versionName \"1.0.2\"', content)
+
+          with open(gradle_path, 'w') as f:
+              f.write(content)
+          "
+
+          # 4. Add explicit uses-sdk to AndroidManifest.xml
           python3 -c "
           manifest_path = 'android/app/src/main/AndroidManifest.xml'
           with open(manifest_path, 'r') as f:
@@ -81,7 +96,7 @@ jobs:
               f.write(data)
           "
 
-          # 4. Resolve Kotlin stdlib duplicates
+          # 5. Resolve Kotlin stdlib duplicates
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
