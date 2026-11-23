@@ -34,9 +34,13 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Direct Manifest & Gradle Enforcement of API 34
+      - name: Inspect and Hardcode SDK 34
         run: |
-          # 1. Update variables.gradle
+          echo "=== BEFORE INSPECTION ==="
+          grep -rn "targetSdk" android/ || true
+          grep -rn "compileSdk" android/ || true
+
+          # 1. Hardcode android/variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 22
@@ -56,16 +60,20 @@ jobs:
           }
           EOF
 
-          # 2. Patch build.gradle to hardcode 34 directly
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
+          # 2. Hardcode android/app/build.gradle directly
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
 
-          # 3. Patch AndroidManifest.xml directly to ensure <uses-sdk> has targetSdkVersion 34
-          if grep -q "android:targetSdkVersion" android/app/src/main/AndroidManifest.xml; then
-            sed -i 's/android:targetSdkVersion="[0-9]*"/android:targetSdkVersion="34"/g' android/app/src/main/AndroidManifest.xml
-          fi
+          # 3. Inject an explicit uses-sdk tag into the AndroidManifest
+          sed -i '/<application/i <uses-sdk android:minSdkVersion="22" android:targetSdkVersion="34" />' android/app/src/main/AndroidManifest.xml
 
-          # 4. Kotlin duplicate class resolution
+          echo "=== AFTER HARDCODING ==="
+          grep -rn "targetSdk" android/ || true
+          grep -rn "compileSdk" android/ || true
+          cat android/app/src/main/AndroidManifest.xml | head -n 20
+
+      - name: Fix Kotlin Dependency Duplicates
+        run: |
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
