@@ -34,9 +34,9 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Force SDK 34 & Fix Kotlin Duplicates
+      - name: Enforce SDK 34 and Fix Dependencies
         run: |
-          # Overwrite variables.gradle
+          # 1. Force variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 22
@@ -56,18 +56,21 @@ jobs:
           }
           EOF
 
-          # Directly patch any occurrences of 32 or 33 to 34 in all gradle files
-          find android/ -name "*.gradle" -exec sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' {} +
-          find android/ -name "*.gradle" -exec sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' {} +
-          find android/ -name "*.gradle" -exec sed -i 's/targetSdk 33/targetSdk 34/g' {} +
-          find android/ -name "*.gradle" -exec sed -i 's/compileSdk 33/compileSdk 34/g' {} +
+          # 2. Aggressive sed replacements on both targetSdk and compileSdk syntax
+          find android/ -name "build.gradle" -exec sed -i -E 's/(targetSdkVersion|targetSdk)[[:space:]]+[0-9]+/targetSdkVersion 34/g' {} +
+          find android/ -name "build.gradle" -exec sed -i -E 's/(compileSdkVersion|compileSdk)[[:space:]]+[0-9]+/compileSdkVersion 34/g' {} +
+          find android/ -name "build.gradle" -exec sed -i 's/rootProject.ext.targetSdkVersion/34/g' {} +
+          find android/ -name "build.gradle" -exec sed -i 's/rootProject.ext.compileSdkVersion/34/g' {} +
 
-          # Also hardcode targetSdkVersion 34 directly into app/build.gradle
-          sed -i 's/targetSdkVersion rootProject.ext.targetSdkVersion/targetSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/compileSdkVersion rootProject.ext.compileSdkVersion/compileSdkVersion 34/g' android/app/build.gradle
-
-          # Fix Kotlin duplicate class collisions
+          # 3. Add Gradle resolutionStrategy for Kotlin and manifest post-processing
           cat << 'EOF' >> android/app/build.gradle
+
+          android {
+              compileSdkVersion 34
+              defaultConfig {
+                  targetSdkVersion 34
+              }
+          }
 
           configurations.all {
               resolutionStrategy {
@@ -80,6 +83,13 @@ jobs:
               }
           }
           EOF
+
+      - name: Verify Target SDK Configuration
+        run: |
+          echo "=== android/variables.gradle ==="
+          cat android/variables.gradle
+          echo "=== android/app/build.gradle snippet ==="
+          grep -E "targetSdk|compileSdk" android/app/build.gradle || true
 
       - name: Generate Release Keystore
         run: |
