@@ -24,22 +24,22 @@ jobs:
         with:
           node-version: 20
 
-      - name: Initialize Web Project & Capacitor
+      - name: Initialize Web Project & Capacitor 6
         run: |
           mkdir -p www
           cp index.html www/
           npm init -y
-          npm install @capacitor/core@^6.0.0 @capacitor/cli@^6.0.0 @capacitor/android@^6.0.0
+          npm install @capacitor/core@6.1.2 @capacitor/cli@6.1.2 @capacitor/android@6.1.2
           npx cap init "Cipher of Baphomet" "com.vectormediadesign.cipherofbaphomet" --web-dir www
           npx cap add android
           npx cap copy android
 
-      - name: Configure SDK 34 & Fix Kotlin Duplicates
+      - name: Enforce MinSDK 24 & TargetSDK 34
         run: |
-          # 1. Update variables.gradle cleanly
+          # 1. Update variables.gradle to minSdk 24 and targetSdk 34
           cat << 'EOF' > android/variables.gradle
           ext {
-              minSdkVersion = 22
+              minSdkVersion = 24
               compileSdkVersion = 34
               targetSdkVersion = 34
               androidxActivityVersion = '1.8.0'
@@ -56,11 +56,32 @@ jobs:
           }
           EOF
 
-          # 2. Add properties directly to gradle.properties for universal override
-          echo "compileSdkVersion=34" >> android/gradle.properties
-          echo "targetSdkVersion=34" >> android/gradle.properties
+          # 2. Hardcode build.gradle to enforce min 24 and target 34
+          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
 
-          # 3. Handle Kotlin duplicate class resolution
+          # 3. Inject tools namespace and forced uses-sdk tag into AndroidManifest.xml
+          python3 -c "
+          manifest_path = 'android/app/src/main/AndroidManifest.xml'
+          with open(manifest_path, 'r') as f:
+              data = f.read()
+
+          if 'xmlns:tools=' not in data:
+              data = data.replace('<manifest ', '<manifest xmlns:tools=\"http://schemas.android.com/tools\" ')
+
+          uses_sdk_tag = '<uses-sdk android:minSdkVersion=\"24\" android:targetSdkVersion=\"34\" tools:replace=\"android:minSdkVersion,android:targetSdkVersion\" />\n'
+          if '<uses-sdk' in data:
+              import re
+              data = re.sub(r'<uses-sdk[^>]*/>', uses_sdk_tag.strip(), data)
+          else:
+              data = data.replace('<application', uses_sdk_tag + '    <application')
+
+          with open(manifest_path, 'w') as f:
+              f.write(data)
+          "
+
+          # 4. Kotlin duplicate resolution
           cat << 'EOF' >> android/app/build.gradle
 
           configurations.all {
@@ -91,7 +112,7 @@ jobs:
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew bundleRelease -PcompileSdkVersion=34 -PtargetSdkVersion=34
+          ./gradlew bundleRelease
 
       - name: Sign Android App Bundle
         run: |
@@ -102,6 +123,12 @@ jobs:
             -storepass "baphometReleasePass2026" \
             -keypass "baphometReleasePass2026" \
             "$AAB_FILE" baphomet-upload-key
+
+      - name: Inspect Built Manifest Inside AAB
+        run: |
+          AAB_FILE=$(find android/app/build/outputs/bundle -name "*.aab" | head -n 1)
+          echo "Verifying manifest attributes inside compiled AAB..."
+          unzip -p "$AAB_FILE" base/manifest/AndroidManifest.xml | strings | grep -i -E "minsdk|targetsdk" || true
 
       - name: Upload Signed AAB Artifact
         uses: actions/upload-artifact@v4
