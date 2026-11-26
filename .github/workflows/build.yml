@@ -110,29 +110,11 @@ jobs:
           }
           EOF
 
-      - name: Generate Permanent Keystore and Export Base64
+      - name: Restore Keystore from Secret
         env:
-          KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
-          KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
-          keytool -genkeypair -v \
-            -keystore permanent-upload-key.jks \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -alias "$KEY_ALIAS" \
-            -dname "CN=Vector Media & Design, OU=Development, O=Vector Media, L=Chicago, ST=Illinois, C=US" \
-            -storepass "$KEYSTORE_PASS" \
-            -keypass "$KEY_PASS"
-
-          keytool -export -rfc \
-            -keystore permanent-upload-key.jks \
-            -alias "$KEY_ALIAS" \
-            -file upload_certificate.pem \
-            -storepass "$KEYSTORE_PASS"
-
-          base64 -w 0 permanent-upload-key.jks > keystore_base64.txt
+          echo "$KEYSTORE_BASE64" | base64 --decode > permanent-upload-key.jks
 
       - name: Build Android App Bundle (Release)
         run: |
@@ -164,8 +146,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cipher-of-baphomet-bundle
-          path: |
-            android/app/build/outputs/bundle/**/*.aab
-            upload_certificate.pem
-            keystore_base64.txt
+          path: android/app/build/outputs/bundle/**/*.aab
           retention-days: 7
