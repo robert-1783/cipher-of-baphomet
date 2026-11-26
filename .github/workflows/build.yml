@@ -34,14 +34,14 @@ jobs:
           npx cap add android
           npx cap copy android
 
-      - name: Enforce MinSDK 24, TargetSDK 34 & VersionCode 2
+      - name: Enforce MinSDK 24, TargetSDK 35 & VersionCode 3
         run: |
           # 1. Overwrite variables.gradle
           cat << 'EOF' > android/variables.gradle
           ext {
               minSdkVersion = 24
-              compileSdkVersion = 34
-              targetSdkVersion = 34
+              compileSdkVersion = 35
+              targetSdkVersion = 35
               androidxActivityVersion = '1.8.0'
               androidxAppCompatVersion = '1.6.1'
               androidxCoordinatorLayoutVersion = '1.2.0'
@@ -58,18 +58,18 @@ jobs:
 
           # 2. Append properties to gradle.properties
           echo "minSdkVersion=24" >> android/gradle.properties
-          echo "compileSdkVersion=34" >> android/gradle.properties
-          echo "targetSdkVersion=34" >> android/gradle.properties
+          echo "compileSdkVersion=35" >> android/gradle.properties
+          echo "targetSdkVersion=35" >> android/gradle.properties
 
-          # 3. Patch app/build.gradle directly to guarantee versionCode 2 and SDK 34
+          # 3. Patch app/build.gradle directly to guarantee versionCode 3 and SDK 35
           python3 -c "
           gradle_path = 'android/app/build.gradle'
           with open(gradle_path, 'r') as f:
               content = f.read()
 
           import re
-          content = re.sub(r'versionCode\s+\d+', 'versionCode 2', content)
-          content = re.sub(r'versionName\s+[\"\'][^\"\']+[\"\']', 'versionName \"1.0.2\"', content)
+          content = re.sub(r'versionCode\s+\d+', 'versionCode 3', content)
+          content = re.sub(r'versionName\s+[\"\'][^\"\']+[\"\']', 'versionName \"1.0.3\"', content)
 
           with open(gradle_path, 'w') as f:
               f.write(content)
@@ -84,7 +84,7 @@ jobs:
           if 'xmlns:tools=' not in data:
               data = data.replace('<manifest ', '<manifest xmlns:tools=\"http://schemas.android.com/tools\" ')
 
-          uses_sdk_tag = '<uses-sdk android:minSdkVersion=\"24\" android:targetSdkVersion=\"34\" tools:replace=\"android:minSdkVersion,android:targetSdkVersion\" />\n'
+          uses_sdk_tag = '<uses-sdk android:minSdkVersion=\"24\" android:targetSdkVersion=\"35\" tools:replace=\"android:minSdkVersion,android:targetSdkVersion\" />\n'
           if '<uses-sdk' in data:
               import re
               data = re.sub(r'<uses-sdk[^>]*/>', uses_sdk_tag.strip(), data)
@@ -120,7 +120,7 @@ jobs:
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew bundleRelease -PminSdkVersion=24 -PcompileSdkVersion=34 -PtargetSdkVersion=34
+          ./gradlew bundleRelease -PminSdkVersion=24 -PcompileSdkVersion=35 -PtargetSdkVersion=35
 
       - name: Sign Android App Bundle
         env:
