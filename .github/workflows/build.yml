@@ -110,23 +110,29 @@ jobs:
           }
           EOF
 
-      - name: Generate Release Keystore and Export Certificate
+      - name: Generate Permanent Keystore and Export Base64
+        env:
+          KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           keytool -genkeypair -v \
-            -keystore release-upload-key.jks \
+            -keystore permanent-upload-key.jks \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -alias baphomet-upload-key \
+            -alias "$KEY_ALIAS" \
             -dname "CN=Vector Media & Design, OU=Development, O=Vector Media, L=Chicago, ST=Illinois, C=US" \
-            -storepass "baphometReleasePass2026" \
-            -keypass "baphometReleasePass2026"
+            -storepass "$KEYSTORE_PASS" \
+            -keypass "$KEY_PASS"
 
           keytool -export -rfc \
-            -keystore release-upload-key.jks \
-            -alias baphomet-upload-key \
+            -keystore permanent-upload-key.jks \
+            -alias "$KEY_ALIAS" \
             -file upload_certificate.pem \
-            -storepass "baphometReleasePass2026"
+            -storepass "$KEYSTORE_PASS"
+
+          base64 -w 0 permanent-upload-key.jks > keystore_base64.txt
 
       - name: Build Android App Bundle (Release)
         run: |
@@ -135,14 +141,18 @@ jobs:
           ./gradlew bundleRelease -PminSdkVersion=24 -PcompileSdkVersion=34 -PtargetSdkVersion=34
 
       - name: Sign Android App Bundle
+        env:
+          KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           AAB_FILE=$(find android/app/build/outputs/bundle -name "*.aab" | head -n 1)
           echo "Signing bundle found at: $AAB_FILE"
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore release-upload-key.jks \
-            -storepass "baphometReleasePass2026" \
-            -keypass "baphometReleasePass2026" \
-            "$AAB_FILE" baphomet-upload-key
+            -keystore permanent-upload-key.jks \
+            -storepass "$KEYSTORE_PASS" \
+            -keypass "$KEY_PASS" \
+            "$AAB_FILE" "$KEY_ALIAS"
 
       - name: Inspect Built Manifest Inside AAB
         run: |
@@ -157,4 +167,5 @@ jobs:
           path: |
             android/app/build/outputs/bundle/**/*.aab
             upload_certificate.pem
+            keystore_base64.txt
           retention-days: 7
